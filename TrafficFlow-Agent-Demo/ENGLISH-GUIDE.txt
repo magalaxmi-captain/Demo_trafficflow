@@ -1,0 +1,187 @@
+TRAFFICFLOW AGENT DEMO — ENGLISH GUIDE
+Autonomous Traffic Flow Optimization & Road-Safety Response
+V2X + Multi-Modal Signals | Educational demonstration
+
+1. START THE APPLICATION
+
+Extract the ZIP completely. Open TrafficFlow-Agent-Demo.html in Google Chrome or Microsoft Edge.
+No installation, internet, account, server or API key is required.
+Keep all files in the extracted folder so the K-Means predictor and guide links work.
+The application itself is self-contained; it can run directly from a local file.
+
+The original machine-learning application is included as KMeans-Predictor.html.
+It still supports actual K-Means training, CSV upload, four congestion classes and centroid inspection.
+
+2. WHAT THIS VERSION ADDS
+
+Your reference describes an agentic traffic system that combines multi-modal evidence, predicts spillover, validates interventions and coordinates an explainable response. This demo implements that workflow with six deterministic software modules:
+
+Perception agent: combines structured camera-event inputs, V2X report counts, reading freshness, observed speed and weather-related visibility.
+Prediction agent: projects vehicle queues across three connected junctions using a finite-storage queue model.
+Planning agent: proposes timing changes, response dispatch, protection of obstructed lanes, emergency priority, diversion or weather caution.
+Safety validator: evaluates each proposed action against explicit demo rules and blocks failing actions.
+Coordination agent: prepares simulated team assignments and records local acknowledgements.
+Explanation agent: creates an operator brief and a public-message draft from the evidence and actual validation outcomes.
+
+These are separate rule-based modules, not LLM agents or independently trained models. The package needs no AI service. The linked original predictor provides the K-Means ML component; the new agent simulator uses a separate queue model.
+
+3. FIVE-MINUTE PROJECT DEMONSTRATION
+
+Step 1 — Incident detection
+Open the app on the default "Collision at J2" scenario. Point out the camera event, V2X reports, observation age and obstructed lane. The fused evidence score is 93/100 and the status is "Collision confirmed" for this simulated evidence.
+
+Step 2 — Spillover prediction
+Show the three-junction corridor. Move the forecast-minute slider to inspect queue growth. The baseline assumes no intervention. Junction storage is finite; excess demand remains outside the corridor instead of disappearing.
+
+Step 3 — Explain the agents
+Select an agent in the decision trail. Read its result. Explain the handoff from evidence fusion to forecasting, planning, validation, coordination and explanation.
+
+Step 4 — Review and apply a plan
+Expand validation checks in an intervention card. Review the passed actions, select the operator-review checkbox and click "Simulate approved actions". Only passed actions are applied. No external infrastructure changes.
+
+Step 5 — Show the comparison
+For the default 15-minute collision scenario, the deterministic demo produces:
+  Waiting vehicle-minutes: 2,648 before / 2,183 after.
+  Outside-corridor backlog: 177 before / 0 after.
+  Vehicles reaching the exit: 315 before / 447 after.
+These are simulation results under fixed assumptions, not field measurements or proof of real-world benefit.
+
+Step 6 — Coordinate and explain
+Click "Simulate acknowledgement" for a response team. Show the event log. Switch between "Operator brief" and "Public draft". Explain that the public text is a draft and has not been transmitted.
+
+Step 7 — Demonstrate a safety failure
+Choose "Unsafe plan challenge". Four of five proposals are blocked. Expand the failed checks: insufficient pedestrian time, insufficient clearance, too much main green, too little time for other movements and no passable lane. Dispatch can still pass; blocked actions remain excluded.
+
+Step 8 — Demonstrate uncertainty
+Choose "Conflicting reports". Weak camera evidence and stale, uncorroborated vehicle reports produce "Incident unverified". A verification task is proposed, and the unauthenticated emergency-priority request is blocked.
+
+Step 9 — Export
+Click "Export demo report" to download the inputs, rules, evidence, proposals, checks, simulation, acknowledgements and event log as JSON.
+
+4. AVAILABLE SCENARIOS
+
+Routine flow: no detected incident; continue monitoring.
+Rush-hour queues: corroborated queue buildup; evaluate a timing adjustment and diversion scenario.
+Collision at J2: one obstructed lane, corroborated reports and available responders.
+Emergency approach: authenticated priority request; emergency planning has its own validation rules. The queue event can remain unverified even when the priority request passes.
+Heavy rain: reduced visibility and discharge capacity; show weather caution and discounted camera evidence.
+Conflicting reports: stale messages, weak camera evidence and an unauthenticated emergency request.
+Unsafe plan challenge: intentionally invalid timings and a fully obstructed road; demonstrate blocked actions.
+
+Scenario buttons load inputs and analyze immediately. Editing an input invalidates the previous plan. Click "Run agent analysis" to generate a replacement. The app disables application, acknowledgement and report export while the displayed result is stale.
+
+5. SIMULATED MULTI-MODAL INPUTS
+
+CCTV event: none, queue, collision or obstruction. This is a structured observation; the app does not analyze camera images or video.
+Camera confidence: editable hypothetical detection confidence from 0 to 100.
+V2X reports: count of simulated event reports from vehicles/infrastructure.
+Observation age: seconds since the hypothetical readings were collected.
+Emergency request and authenticated sender: editable flags, not a real protocol or cryptographic validation.
+Road state: available lanes, obstructed lanes and arriving vehicle demand.
+Observed speed: contributes to incident evidence; queue discharge follows the separate capacity model.
+Weather: rain and visibility reduce modeled capacity. Low visibility also discounts camera evidence.
+Pedestrians waiting: recorded as scenario context. This version protects a fixed minimum crossing interval; it does not estimate pedestrian discharge or crossing duration from the count.
+Signal proposal: main green, pedestrian walk and clearance durations.
+Response team available: gates simulated dispatch, lane protection and emergency coordination.
+
+6. EVIDENCE FUSION
+
+If the camera event is "none", the event score is zero.
+For an event, the score combines:
+  55% of the camera-confidence value;
+  up to 30 points for fresh V2X reports (saturating at eight reports);
+  15 points if observed speed is below 20 km/h.
+Visibility below 150 m multiplies the camera contribution by 0.65.
+V2X observations are fresh only at age 60 seconds or less.
+
+An incident is marked confirmed only when the score is at least 70, there are at least two fresh V2X reports and an event is present.
+The evidence score is a heuristic, not a probability or measured accuracy. Camera confidence is assumed rather than estimated by a trained perception model.
+
+7. DEMO SAFETY POLICY
+
+The following are illustrative software guardrails, not traffic laws, engineering standards or certified operating limits:
+  Cycle length: 120 seconds.
+  Maximum proposed main green: 65 seconds.
+  Minimum pedestrian interval: 15 seconds.
+  Minimum clearance interval: 4 seconds.
+  Minimum remaining time for other movements: 25 seconds.
+  Maximum observation age for timing/priority: 60 seconds.
+  Timing/priority requires at least one passable lane.
+  Emergency priority also requires an authenticated request, visibility of at least 150 m and an available response team.
+  Dispatch, lane protection and diversion require corroborated incident evidence.
+  Dispatch and lane protection require a response team.
+  Lane protection must leave at least one lane passable.
+  Full blockage requires operator handling before this demo approves diversion.
+
+The engine revalidates a plan when applying it. Merely altering a stored action's status does not bypass validation. A real deployment would additionally need authorization, signed telemetry and infrastructure controls; these are outside this offline demo.
+
+8. QUEUE SIMULATION AND IMPACT
+
+The simulated road has J1 (West Gate), J2 (Central) and J3 (East Gate).
+Storage limits are 90, 75 and 85 vehicles respectively. Simulation advances in one-minute steps for 5 to 30 minutes.
+Base saturation capacity is assumed to be 30 vehicles/minute per open lane at continuous green. Signal share and weather reduce that capacity. The baseline main green is 42 seconds in a 120-second cycle. Approved timing/priority changes J2 to the proposed main green. J1 and J3 stay at the baseline timing.
+
+Backward supply limits prevent a junction from sending more vehicles into the next junction than its available storage permits. External arrivals that cannot enter J1 accumulate in the outside-corridor backlog.
+Spillover is flagged if any junction reaches 85% of storage at any point in the horizon.
+
+Approved diversion reduces external arrivals by a fixed 12% as a what-if assumption. There is no real alternate-route network or route validation.
+Approved response dispatch assumes an obstruction clears after 10 minutes, or 6 minutes if lane protection also passes. These are fixed scenario assumptions, not predicted team arrival or clearance times.
+Approved weather caution applies a conservative 4% discharge reduction; it is not guaranteed to reduce congestion.
+
+Waiting vehicle-minutes sum the in-corridor queue at every one-minute step. This is an idling proxy, not an emissions estimate. Vehicles outside the corridor are displayed separately and are not included in that waiting metric. Compare both quantities.
+The model does not compute injury risk, secondary-crash probability, CO2, ambulance ETA or measured clearance performance. It does not model competing directional flows or individual vehicles. Safety checks constrain timing budgets, but the simulator does not independently validate intersection conflict geometry.
+Some plans show unchanged or worse metrics. The app displays those outcomes rather than assuming every intervention helps.
+
+9. ENGLISH PRESENTATION SCRIPT
+
+"This project demonstrates an explainable traffic-response workflow. We combine simulated CCTV observations, V2X messages, weather and road information. A perception agent evaluates whether the evidence supports an incident. A prediction agent estimates queue buildup and spillover across a corridor. A planning agent proposes interventions, and a separate validator blocks actions that violate our demonstration guardrails. An operator can then apply the approved plan inside the simulation. Coordination and explanation modules produce responder tasks, an audit trail and separate operator and public drafts. The original K-Means predictor remains available for traffic-condition clustering. The current system is an offline prototype; live sensor ingestion and real traffic control require further implementation and validation."
+
+10. SOURCE CODE AND REBUILDING
+
+TrafficFlow-Agent-Demo.html: complete offline agent application; open this file.
+source/engine.js: scenarios, validation, evidence fusion, queue model, planning, safety checks, coordination and explanations.
+source/app.js: form handling, charts, plan display, operator review, acknowledgements and report export.
+source/page.html: editable HTML and CSS template.
+source/build.py: combines the template and JavaScript into the application.
+source/test-engine.cjs: scenario and safety tests.
+
+KMeans-Predictor.html: retained original K-Means application.
+kmeans-source/: complete source for that original application.
+sample-traffic.csv: original simulated K-Means training dataset.
+KMEANS-GUIDE.md: original predictor's English instructions.
+
+To edit the agent demo, modify files in source/, then run from this folder:
+  python source/build.py
+On Windows you can also use:
+  py source/build.py
+Optional engine tests, if Node.js is installed:
+  node source/test-engine.cjs
+
+To rebuild the original predictor:
+  python kmeans-source/build.py
+Optional original model tests:
+  node kmeans-source/test-model.cjs
+
+Python and Node.js are only needed for rebuilding or developer tests. Neither is required to use the delivered HTML applications. Rebuilding replaces the generated HTML, so make durable edits in source files.
+
+11. COMMON QUESTIONS
+
+Does it use live CCTV or V2X? No. The input panel simulates structured signals. There is no camera/video processing, roadside-unit link or authenticated V2X protocol implementation.
+Does it automatically control traffic? It automatically prepares a proposed plan; application requires operator review and affects only the local simulation.
+Does it send responder or public messages? No. All assignments, acknowledgements and drafts remain in the browser.
+Does it prove lower emissions or fewer accidents? No. Those are target benefits from the challenge brief, not demonstrated real-world outcomes.
+Can I use my traffic CSV? Yes, in the linked K-Means predictor. The agent simulator currently uses its built-in scenarios and editable input panel, not CSV time-series ingestion.
+Is there an LLM? No. Agents are modular deterministic decision functions. Template-based explanations state the evidence and decisions transparently.
+Why can the emergency scenario show an unverified queue? Event corroboration and authenticated priority are different checks. A priority request can pass without confirming a collision or queue event.
+Why did a result stay unchanged? Changing one junction's timing may not help if another junction is the bottleneck. The simulation reports its computed result.
+Do results survive refresh? No. Reports can be exported; the browser session resets on refresh.
+
+12. NEXT IMPLEMENTATION STAGES FOR A LIVE SYSTEM
+
+Ingest permissioned CCTV detections, timestamped V2X messages, weather and signal telemetry.
+Train and evaluate perception models on appropriate labeled datasets.
+Calibrate the corridor model and forecast it on chronological holdout data.
+Replace illustrative guardrails with locally approved engineering and policy constraints.
+Add secure sender validation, role-based operator approval and durable audit records.
+Integrate dispatch and signal systems through authorized APIs in a controlled test environment.
+Measure incident clearance, emergency response, network-wide delay, safety outcomes and emissions with independent baselines before making performance claims.

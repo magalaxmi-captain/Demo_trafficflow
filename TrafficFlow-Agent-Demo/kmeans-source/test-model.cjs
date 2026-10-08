@@ -1,0 +1,21 @@
+const assert=require('node:assert/strict');
+const M=require('./model.js');
+const rows=M.synthetic(),model=M.fit(rows);
+assert.equal(rows.length,2016);
+M.prototypes.forEach((p,i)=>assert.equal(M.predict(model,Object.fromEntries(M.keys.map((k,j)=>[k,p[j]]))).label,M.labels[i]));
+assert.deepEqual(M.parseCSV(M.toCSV(rows)),rows);
+assert.throws(()=>M.parseCSV('location,time,vehicles,speed,density,occupancy\nx,25:00,10,20,30,40'),/valid 24/);
+assert.throws(()=>M.parseCSV('location,time,vehicles,speed,density,occupancy\nx,12:00,,20,30,40'),/missing/);
+assert.throws(()=>M.fit(rows.slice(0,3)),/40/);
+assert.throws(()=>M.fit(Array(40).fill(rows[0])),/distinct/);
+assert.throws(()=>M.predict(model,{vehicles:-1,speed:20,density:10,occupancy:10}),/between/);
+assert.throws(()=>M.predict(model,{vehicles:5,speed:NaN,density:10,occupancy:10}),/between/);
+const input={vehicles:340,speed:24,density:90,occupancy:65};
+assert.equal(M.forecast(model,input,'Central Junction','23:45',30).time,'00:15');
+assert.equal(M.forecast(model,input,'Missing road','17:00',30),null);
+assert.equal(M.forecast(model,input,'Central Junction','17:00',30).label,'Severe');
+assert(model.silhouette>=-1&&model.silhouette<=1);
+// Scaling invariance: normalizing training features retains the cluster partitions.
+assert.equal(model.counts.reduce((a,b)=>a+b,0),2016);
+const a=M.predict(model,input);assert.equal(a.distance,Math.min(...a.distances));
+console.log('PASS: four classes, CSV roundtrip, validation, insufficient data, midnight rollover, missing history, nearest centroid, silhouette bounds.');
